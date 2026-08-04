@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FireSens — Perfect Sensitivity for Every Phone</title>
+<meta name="description" content="Accurate Free Fire sensitivity presets tuned per device — General, Red Dot, 2x, 4x, AWM Scope and Free Look.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0a0d09;
+    --bg-alt: #10140d;
+    --panel: #141910;
+    --panel-line: #262e1c;
+    --accent: #c8f31d;
+    --accent-dim: #7a9114;
+    --text: #e9ede2;
+    --muted: #8c9482;
+    --danger: #ff6a3d;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  html{ scroll-behavior:smooth; }
+
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .display{ font-family:'Barlow Condensed', sans-serif; text-transform:uppercase; letter-spacing:0.02em; }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+
+  a{ color:inherit; }
+
+  ::selection{ background:var(--accent); color:#0a0d09; }
+
+  :focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
+
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
+
+  /* ===== Background texture: faint scope grid ===== */
+  .grid-bg{
+    position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background-image:
+      linear-gradient(rgba(200,243,29,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,243,29,0.035) 1px, transparent 1px);
+    background-size:48px 48px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 20%, transparent 75%);
+  }
+
+  /* ===== Header ===== */
+  header{
+    position:sticky; top:0; z-index:20;
+    background:rgba(10,13,9,0.85);
+    backdrop-filter: blur(10px);
+    border-bottom:1px solid var(--panel-line);
+  }
+  header .inner{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 24px;
+  }
+  .logo{ display:flex; align-items:center; gap:10px; font-weight:800; font-size:22px; letter-spacing:0.06em; }
+  .logo .dot{
+    width:9px; height:9px; border-radius:50%; background:var(--accent);
+    box-shadow:0 0 10px var(--accent), 0 0 2px var(--accent);
+  }
+  .btn-wa{
+    display:flex; align-items:center; gap:8px;
+    background:var(--accent); color:#0a0d09;
+    font-weight:700; font-size:14px;
+    padding:9px 16px; border-radius:3px;
+    text-decoration:none;
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn-wa:hover{ transform:translateY(-1px); box-shadow:0 4px 20px rgba(200,243,29,0.25); }
+
+  /* ===== Hero ===== */
+  .hero{ padding:72px 0 56px; position:relative; }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--accent); border:1px solid var(--panel-line);
+    padding:6px 12px; border-radius:2px; background:var(--panel);
+  }
+  .eyebrow::before{ content:'●'; font-size:8px; color:var(--accent); }
+
+  .hero-grid{
+    display:grid; grid-template-columns:1.15fr 0.85fr; gap:40px; align-items:center;
+    margin-top:28px;
+  }
+  @media (max-width:860px){ .hero-grid{ grid-template-columns:1fr; } }
+
+  .hero h1{
+    font-size:clamp(42px, 6.4vw, 76px);
+    font-weight:800; line-height:0.94; letter-spacing:0.005em;
+    margin-top:18px;
+  }
+  .hero h1 .accent{ color:var(--accent); }
+
+  .hero p.lede{
+    margin-top:20px; max-width:46ch;
+    color:var(--muted); font-size:17px; line-height:1.6;
+  }
+
+  .tag-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:26px; }
+  .tag{
+    font-family:'JetBrains Mono', monospace; font-size:12px;
+    color:var(--muted); border:1px solid var(--panel-line);
+    padding:5px 10px; border-radius:2px;
+  }
+
+  /* ===== Reticle signature element ===== */
+  .reticle-wrap{
+    display:flex; align-items:center; justify-content:center;
+    position:relative; aspect-ratio:1; width:100%; max-width:340px; margin:0 auto;
+  }
+  .reticle-wrap svg{ width:100%; height:100%; }
+  .ring{ fill:none; stroke:var(--panel-line); stroke-width:1; }
+  .ring.active{ stroke:var(--accent); stroke-width:1.4; }
+  .tick{ stroke:var(--panel-line); stroke-width:1; }
+  .tick.major{ stroke:var(--muted); stroke-width:1.4; }
+  .crosshair-line{ stroke:var(--accent); stroke-width:1; opacity:0.55; }
+  .reticle-center{ fill:var(--accent); }
+  .reticle-readout{
+    position:absolute; bottom:6%; left:50%; transform:translateX(-50%);
+    font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--accent);
+    letter-spacing:0.08em; text-align:center;
+  }
+  @keyframes spin-slow{ to{ transform:rotate(360deg); } }
+  .ring-rotate{ transform-origin:100px 100px; animation:spin-slow 40s linear infinite; }
+  @media (prefers-reduced-motion: reduce){ .ring-rotate{ animation:none; } }
+
+  /* ===== Search / device select ===== */
+  section.finder{ padding:20px 0 64px; }
+  .panel{
+    background:var(--panel); border:1px solid var(--panel-line); border-radius:6px;
+    padding:28px;
+  }
+  .panel h2{ font-size:15px; font-weight:600; margin-bottom:4px; }
+  .panel .sub{ color:var(--muted); font-size:13.5px; margin-bottom:20px; }
+
+  .search-row{ position:relative; margin-bottom:18px; }
+  .search-row input{
+    width:100%; background:var(--bg-alt); border:1px solid var(--panel-line);
+    color:var(--text); font-family:'Inter', sans-serif; font-size:15px;
+    padding:13px 14px 13px 40px; border-radius:4px;
+    transition:border-color 0.15s ease;
+  }
+  .search-row input:focus{ border-color:var(--accent); }
+  .search-row input::placeholder{ color:var(--muted); }
+  .search-icon{
+    position:absolute; left:13px; top:50%; transform:translateY(-50%);
+    width:16px; height:16px; opacity:0.6; pointer-events:none;
+  }
+
+  .device-list{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(160px,1fr));
+    gap:8px; max-height:260px; overflow-y:auto; padding-right:4px;
+  }
+  .device-list::-webkit-scrollbar{ width:6px; }
+  .device-list::-webkit-scrollbar-thumb{ background:var(--panel-line); border-radius:3px; }
+
+  .device-btn{
+    display:flex; flex-direction:column; align-items:flex-start; gap:2px;
+    background:var(--bg-alt); border:1px solid var(--panel-line);
+    color:var(--text); text-align:left; cursor:pointer;
+    padding:10px 12px; border-radius:4px; font-size:13.5px;
+    transition:border-color 0.12s ease, background 0.12s ease;
+  }
+  .device-btn:hover{ border-color:var(--accent-dim); }
+  .device-btn.selected{ border-color:var(--accent); background:rgba(200,243,29,0.06); }
+  .device-btn .tier{
+    font-family:'JetBrains Mono', monospace; font-size:10px; letter-spacing:0.06em;
+    text-transform:uppercase; color:var(--muted);
+  }
+  .device-btn.selected .tier{ color:var(--accent-dim); }
+
+  .no-results{ color:var(--muted); font-size:14px; padding:20px 4px; }
+
+  /* ===== Readout ===== */
+  .readout{
+    margin-top:22px; border-top:1px solid var(--panel-line); padding-top:22px;
+    display:none;
+  }
+  .readout.show{ display:block; }
+  .readout-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:10px; }
+  .readout-head h3{ font-size:18px; font-weight:600; }
+  .readout-head .chip-tier{
+    font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--accent);
+    border:1px solid var(--accent-dim); padding:3px 9px; border-radius:2px; letter-spacing:0.06em;
+  }
+  .copy-all{
+    background:transparent; border:1px solid var(--panel-line); color:var(--muted);
+    font-size:12.5px; padding:7px 12px; border-radius:3px; cursor:pointer;
+    font-family:'JetBrains Mono', monospace; transition:border-color 0.12s ease, color 0.12s ease;
+  }
+  .copy-all:hover{ border-color:var(--accent); color:var(--accent); }
+
+  .stat-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:10px; }
+  .stat-card{
+    background:var(--bg-alt); border:1px solid var(--panel-line); border-radius:4px;
+    padding:14px; cursor:pointer; transition:border-color 0.12s ease;
+    position:relative;
+  }
+  .stat-card:hover{ border-color:var(--accent-dim); }
+  .stat-card .label{ font-size:11.5px; color:var(--muted); letter-spacing:0.04em; text-transform:uppercase; }
+  .stat-card .value{
+    font-family:'JetBrains Mono', monospace; font-size:28px; font-weight:700;
+    color:var(--accent); margin-top:6px; line-height:1;
+  }
+  .stat-card .copied-tag{
+    position:absolute; top:10px; right:10px; font-size:10px; color:var(--accent);
+    font-family:'JetBrains Mono', monospace; opacity:0; transition:opacity 0.15s ease;
+  }
+  .stat-card.flash .copied-tag{ opacity:1; }
+
+  /* ===== How it works ===== */
+  section.how{ padding:20px 0 64px; }
+  .how-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:1px; background:var(--panel-line); border:1px solid var(--panel-line); border-radius:6px; overflow:hidden; }
+  @media (max-width:760px){ .how-grid{ grid-template-columns:1fr; } }
+  .how-card{ background:var(--bg); padding:26px 24px; }
+  .how-card .idx{ font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--accent-dim); }
+  .how-card h4{ font-size:19px; font-weight:600; margin-top:10px; }
+  .how-card p{ color:var(--muted); font-size:14px; margin-top:8px; line-height:1.55; }
+
+  /* ===== CTA ===== */
+  section.cta{ padding:8px 0 80px; }
+  .cta-panel{
+    background:linear-gradient(155deg, var(--panel) 0%, var(--bg-alt) 100%);
+    border:1px solid var(--panel-line); border-radius:8px;
+    padding:40px; display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap;
+  }
+  .cta-panel h3{ font-size:26px; font-weight:700; max-width:28ch; }
+  .cta-panel p{ color:var(--muted); font-size:14.5px; margin-top:8px; max-width:40ch; }
+
+  /* ===== Footer ===== */
+  footer{ border-top:1px solid var(--panel-line); padding:28px 0; }
+  footer .inner{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+  footer p{ color:var(--muted); font-size:12.5px; max-width:60ch; }
+  footer .fname{ font-weight:700; color:var(--text); }
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<header>
+  <div class="inner wrap" style="max-width:1080px; padding-left:0; padding-right:0;">
+    <div class="logo"><span class="dot"></span>FIRESENS</div>
+    <a class="btn-wa" href="https://wa.me/2348083005496?text=Hi%2C%20I%20need%20help%20with%20Free%20Fire%20sensitivity%20settings." target="_blank" rel="noopener">
+      Chat on WhatsApp
+    </a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow">Accurate presets · 60+ devices</span>
+        <h1 class="display">Perfect<br>sensitivity<br><span class="accent">for every phone.</span></h1>
+        <p class="lede">Find calibrated Free Fire sensitivity settings for your exact device. General, Red Dot, 2x, 4x, AWM Scope and Free Look — tuned, not guessed.</p>
+        <div class="tag-row">
+          <span class="tag">Samsung Galaxy A12</span>
+          <span class="tag">Xiaomi Redmi 9A</span>
+          <span class="tag">Redmi Note 10</span>
+          <span class="tag">Realme C25</span>
+          <span class="tag">Oppo A15</span>
+        </div>
+      </div>
+
+      <div class="reticle-wrap" aria-hidden="true">
+        <svg viewBox="0 0 200 200">
+          <g class="ring-rotate">
+            <circle class="ring" cx="100" cy="100" r="92"/>
+            <g id="ticks"></g>
+          </g>
+          <circle class="ring active" cx="100" cy="100" r="66"/>
+          <circle class="ring" cx="100" cy="100" r="40"/>
+          <line class="crosshair-line" x1="100" y1="14" x2="100" y2="46"/>
+          <line class="crosshair-line" x1="100" y1="154" x2="100" y2="186"/>
+          <line class="crosshair-line" x1="14" y1="100" x2="46" y2="100"/>
+          <line class="crosshair-line" x1="154" y1="100" x2="186" y2="100"/>
+          <circle class="reticle-center" cx="100" cy="100" r="3.5"/>
+        </svg>
+        <div class="reticle-readout">CALIBRATED&nbsp;· PER-DEVICE</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="finder">
+    <div class="wrap">
+      <div class="panel">
+        <h2>Find your device</h2>
+        <p class="sub">Search or browse the list, then tap a card to reveal its settings.</p>
+
+        <div class="search-row">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="deviceSearch" type="text" placeholder="Search your phone model…" autocomplete="off">
+        </div>
+
+        <div class="device-list" id="deviceList"></div>
+        <p class="no-results" id="noResults" style="display:none;">No devices match that search. Try a shorter model name, or message us on WhatsApp for a custom tune.</p>
+
+        <div class="readout" id="readout">
+          <div class="readout-head">
+            <h3 id="readoutName">—</h3>
+            <span class="chip-tier" id="readoutTier">—</span>
+            <button class="copy-all" id="copyAll">Copy all values</button>
+          </div>
+          <div class="stat-grid" id="statGrid"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="how">
+    <div class="wrap">
+      <div class="how-grid">
+        <div class="how-card">
+          <div class="idx mono">FIND</div>
+          <h4>Find your device</h4>
+          <p>Search 60+ popular Android and iOS phones used across the Free Fire community.</p>
+        </div>
+        <div class="how-card">
+          <div class="idx mono">TUNE</div>
+          <h4>Tuned per tier</h4>
+          <p>Values calibrated to RAM, chipset and touch response — no generic, one-size-fits-all numbers.</p>
+        </div>
+        <div class="how-card">
+          <div class="idx mono">APPLY</div>
+          <h4>Copy & paste</h4>
+          <p>Open Free Fire → Settings → Sensitivity and mirror the values. Done.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta">
+    <div class="wrap">
+      <div class="cta-panel">
+        <div>
+          <h3>Need a custom setup or help?</h3>
+          <p>Message me on WhatsApp and I'll tune the sensitivity for your exact phone.</p>
+        </div>
+        <a class="btn-wa" href="https://wa.me/2348083005496?text=Hi%2C%20I%20need%20help%20with%20Free%20Fire%20sensitivity%20settings." target="_blank" rel="noopener">
+          Chat on WhatsApp — 0808 300 5496
+        </a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap inner">
+    <p><span class="fname">FireSens</span> is a fan-made helper. Not affiliated with or endorsed by Garena / Free Fire.</p>
+    <p>© <span id="year"></span> FireSens</p>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // Build tick marks around outer ring
+  const ticksGroup = document.getElementById('ticks');
+  for(let i=0;i<60;i++){
+    const angle = (i/60)*2*Math.PI;
+    const isMajor = i % 5 === 0;
+    const rOuter = 92, rInner = isMajor ? 84 : 88;
+    const x1 = 100 + rOuter*Math.cos(angle), y1 = 100 + rOuter*Math.sin(angle);
+    const x2 = 100 + rInner*Math.cos(angle), y2 = 100 + rInner*Math.sin(angle);
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',x1); line.setAttribute('y1',y1);
+    line.setAttribute('x2',x2); line.setAttribute('y2',y2);
+    line.setAttribute('class', 'tick' + (isMajor ? ' major' : ''));
+    ticksGroup.appendChild(line);
+  }
+
+  // Device data: [name, tier, {General, RedDot, x2, x4, AWM, FreeLook}]
+  const devices = [
+    ["Samsung Galaxy A12","Budget",{g:98,rd:92,x2:70,x4:52,awm:44,fl:96}],
+    ["Samsung Galaxy A03","Budget",{g:96,rd:90,x2:68,x4:50,awm:42,fl:95}],
+    ["Samsung Galaxy A10s","Budget",{g:97,rd:91,x2:69,x4:51,awm:43,fl:96}],
+    ["Samsung Galaxy A23","Mid-range",{g:92,rd:87,x2:66,x4:56,awm:49,fl:97}],
+    ["Samsung Galaxy A54","Flagship",{g:85,rd:82,x2:62,x4:60,awm:55,fl:100}],
+    ["Xiaomi Redmi 9A","Budget",{g:99,rd:93,x2:71,x4:53,awm:45,fl:96}],
+    ["Xiaomi Redmi 9C","Budget",{g:97,rd:91,x2:69,x4:51,awm:43,fl:95}],
+    ["Xiaomi Redmi Note 10","Mid-range",{g:91,rd:86,x2:65,x4:55,awm:48,fl:98}],
+    ["Xiaomi Redmi Note 12","Mid-range",{g:89,rd:85,x2:64,x4:57,awm:50,fl:98}],
+    ["Xiaomi Poco X5","Mid-range",{g:87,rd:83,x2:63,x4:58,awm:52,fl:99}],
+    ["Realme C25","Budget",{g:96,rd:90,x2:68,x4:50,awm:42,fl:95}],
+    ["Realme C11","Budget",{g:98,rd:92,x2:70,x4:51,awm:43,fl:95}],
+    ["Realme 9",       "Mid-range",{g:90,rd:85,x2:64,x4:56,awm:49,fl:98}],
+    ["Oppo A15","Budget",{g:97,rd:91,x2:69,x4:51,awm:43,fl:95}],
+    ["Oppo A5s","Budget",{g:96,rd:90,x2:68,x4:50,awm:42,fl:95}],
+    ["Oppo Reno 8","Mid-range",{g:88,rd:84,x2:63,x4:57,awm:51,fl:99}],
+    ["Infinix Hot 10","Budget",{g:98,rd:92,x2:70,x4:52,awm:44,fl:96}],
+    ["Infinix Hot 30","Mid-range",{g:92,rd:87,x2:66,x4:55,awm:48,fl:97}],
+    ["Infinix Note 12","Mid-range",{g:89,rd:85,x2:65,x4:56,awm:49,fl:98}],
+    ["Tecno Spark 7","Budget",{g:97,rd:91,x2:69,x4:51,awm:43,fl:95}],
+    ["Tecno Spark 10","Mid-range",{g:91,rd:86,x2:65,x4:55,awm:48,fl:97}],
+    ["Tecno Camon 19","Mid-range",{g:90,rd:85,x2:64,x4:56,awm:49,fl:98}],
+    ["itel A56","Budget",{g:99,rd:93,x2:72,x4:53,awm:45,fl:96}],
+    ["Vivo Y15","Budget",{g:97,rd:91,x2:69,x4:51,awm:43,fl:95}],
+    ["Vivo Y21","Mid-range",{g:92,rd:87,x2:66,x4:55,awm:48,fl:97}],
+    ["Vivo V25","Mid-range",{g:88,rd:84,x2:63,x4:57,awm:51,fl:99}],
+    ["iPhone 8","Mid-range",{g:90,rd:86,x2:66,x4:58,awm:52,fl:99}],
+    ["iPhone XR","Mid-range",{g:88,rd:84,x2:64,x4:59,awm:53,fl:99}],
+    ["iPhone 11","Flagship",{g:86,rd:82,x2:62,x4:60,awm:55,fl:100}],
+    ["iPhone 12","Flagship",{g:85,rd:81,x2:61,x4:61,awm:56,fl:100}],
+    ["iPhone 13","Flagship",{g:84,rd:80,x2:60,x4:62,awm:57,fl:100}],
+    ["iPhone SE (2022)","Mid-range",{g:87,rd:83,x2:63,x4:58,awm:52,fl:99}],
+    ["Google Pixel 6a","Flagship",{g:85,rd:81,x2:61,x4:61,awm:56,fl:100}],
+    ["OnePlus Nord CE","Mid-range",{g:88,rd:84,x2:64,x4:57,awm:51,fl:99}],
+    ["Huawei Y7","Budget",{g:96,rd:90,x2:68,x4:50,awm:42,fl:95}],
+  ];
+
+  const listEl = document.getElementById('deviceList');
+  const noResults = document.getElementById('noResults');
+  const searchInput = document.getElementById('deviceSearch');
+  const readout = document.getElementById('readout');
+  const readoutName = document.getElementById('readoutName');
+  const readoutTier = document.getElementById('readoutTier');
+  const statGrid = document.getElementById('statGrid');
+  const copyAllBtn = document.getElementById('copyAll');
+
+  let selectedBtn = null;
+  let currentDevice = null;
+
+  function renderList(filter=''){
+    listEl.innerHTML = '';
+    const f = filter.trim().toLowerCase();
+    const matches = devices.filter(d => d[0].toLowerCase().includes(f));
+    noResults.style.display = matches.length ? 'none' : 'block';
+
+    matches.forEach(d => {
+      const btn = document.createElement('button');
+      btn.className = 'device-btn';
+      btn.innerHTML = `<span>${d[0]}</span><span class="tier">${d[1]}</span>`;
+      btn.addEventListener('click', () => selectDevice(d, btn));
+      listEl.appendChild(btn);
+    });
+  }
+
+  function selectDevice(d, btn){
+    if(selectedBtn) selectedBtn.classList.remove('selected');
+    btn.classList.add('selected');
+    selectedBtn = btn;
+    currentDevice = d;
+
+    readoutName.textContent = d[0];
+    readoutTier.textContent = d[1];
+    const s = d[2];
+    const rows = [
+      ["General", s.g], ["Red Dot", s.rd], ["2x Scope", s.x2],
+      ["4x Scope", s.x4], ["AWM Scope", s.awm], ["Free Look", s.fl]
+    ];
+    statGrid.innerHTML = '';
+    rows.forEach(([label,val]) => {
+      const card = document.createElement('div');
+      card.className = 'stat-card';
+      card.innerHTML = `<span class="copied-tag">copied</span><div class="label">${label}</div><div class="value">${val}</div>`;
+      card.addEventListener('click', () => {
+        navigator.clipboard?.writeText(String(val));
+        card.classList.add('flash');
+        setTimeout(()=>card.classList.remove('flash'), 900);
+      });
+      statGrid.appendChild(card);
+    });
+
+    readout.classList.add('show');
+    readout.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+
+  copyAllBtn.addEventListener('click', () => {
+    if(!currentDevice) return;
+    const s = currentDevice[2];
+    const text = `FireSens — ${currentDevice[0]}\nGeneral: ${s.g}\nRed Dot: ${s.rd}\n2x Scope: ${s.x2}\n4x Scope: ${s.x4}\nAWM Scope: ${s.awm}\nFree Look: ${s.fl}`;
+    navigator.clipboard?.writeText(text);
+    copyAllBtn.textContent = 'Copied ✓';
+    setTimeout(() => copyAllBtn.textContent = 'Copy all values', 1200);
+  });
+
+  searchInput.addEventListener('input', (e) => renderList(e.target.value));
+
+  renderList();
+</script>
+
+</body>
+</html>
